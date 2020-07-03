@@ -63,6 +63,7 @@ class Inference:
 
     # Load network
     self.net = self.load_net()
+    print(self.net)
 
   def load_net(self):
     # Load network

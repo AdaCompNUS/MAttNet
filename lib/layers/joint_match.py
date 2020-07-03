@@ -198,8 +198,11 @@ class JointMatching(nn.Module):
     scores = (weights * torch.cat([sub_matching_scores, 
                                    loc_matching_scores, 
                                    rel_matching_scores], 1)).sum(1) # (n, )
+    module_scores = torch.cat([sub_matching_scores, 
+                               loc_matching_scores, 
+                               rel_matching_scores], 1)
 
-    return scores, sub_grid_attn, sub_attn, loc_attn, rel_attn, rel_ixs, weights, att_scores
+    return scores, sub_grid_attn, sub_attn, loc_attn, rel_attn, rel_ixs, weights, att_scores, module_scores
 
 
   def sub_rel_kl(self, sub_attn, rel_attn, input_labels):

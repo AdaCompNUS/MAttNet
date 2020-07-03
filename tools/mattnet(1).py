@@ -217,13 +217,14 @@ class MattNet():
     labels = self.encode_labels([expr], self.word_to_ix)  # (1, sent_length)
     labels = Variable(torch.from_numpy(labels).long().cuda())
     expanded_labels = labels.expand(len(det_ids), labels.size(1)) # (n, sent_length)
-    scores, sub_grid_attn, sub_attn, loc_attn, rel_attn, rel_ixs, weights, att_scores = \
+    scores, sub_grid_attn, sub_attn, loc_attn, rel_attn, rel_ixs, weights, att_scores, module_scores = \
           self.model(Feats['pool5'], Feats['fc7'], Feats['lfeats'], Feats['dif_lfeats'], 
                      Feats['cxt_fc7'], Feats['cxt_lfeats'], 
                      expanded_labels) 
 
     # move to numpy
     scores = scores.data.cpu().numpy()
+    module_scores = module_scores.data.cpu().numpy()
     pred_ix = np.argmax(scores)
     pred_det_id = det_ids[pred_ix]
     att_scores = F.sigmoid(att_scores)  # (n, num_atts)
@@ -245,6 +246,8 @@ class MattNet():
     entry['loc_attn'] = loc_attn[pred_ix].data.cpu().numpy().tolist() # list of seq_len attn
     entry['rel_attn'] = rel_attn[pred_ix].data.cpu().numpy().tolist() # list of seq_len attn
     entry['weights'] = weights[pred_ix].data.cpu().numpy().tolist()   # list of 3 weights
+    entry['overall_scores'] = scores
+    entry['module_scores'] = module_scores
     # attributes
     pred_atts = []  # list of (att_wd, score)
     pred_att_scores = att_scores[pred_ix].data.cpu().numpy()
@@ -254,7 +257,6 @@ class MattNet():
     entry['pred_atts'] = pred_atts
 
     return entry
-
 
   def encode_labels(self, sent_str_list, word_to_ix):
     """
