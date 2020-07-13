@@ -113,7 +113,7 @@ def eval_split(loader, model, crit, split, opt):
 
       # expand labels
       label = labels[i:i+1]      # (1, label.size(1))
-      max_len = (label != 0).sum().data[0]
+      max_len = (label != 0).sum().data.item()
       label = label[:, :max_len] # (1, max_len) 
       expanded_labels = label.expand(len(ann_ids), max_len) # (n, max_len)
 
@@ -127,7 +127,7 @@ def eval_split(loader, model, crit, split, opt):
       # weights : (n, 2) weights on modules
       # att_scores: (n, num_atts)
       tic = time.time()
-      scores, sub_grid_attn, sub_attn, loc_attn, rel_attn, rel_ixs, weights, att_scores = \
+      scores, sub_grid_attn, sub_attn, loc_attn, rel_attn, rel_ixs, weights, att_scores, _ = \
         model(Feats['pool5'], Feats['fc7'], Feats['lfeats'], Feats['dif_lfeats'], 
               Feats['cxt_fc7'], Feats['cxt_lfeats'],
               expanded_labels) 
@@ -230,7 +230,7 @@ def eval_dets_split(loader, model, crit, split, opt):
 
       # expand labels
       label = labels[i:i+1]      # (1, label.size(1))
-      max_len = (label != 0).sum().data[0]
+      max_len = (label != 0).sum().data.item()
       label = label[:, :max_len] # (1, max_len) 
       expanded_labels = label.expand(len(det_ids), max_len) # (n, max_len)
 
@@ -244,7 +244,7 @@ def eval_dets_split(loader, model, crit, split, opt):
       # weights : (n, 2) weights on subj and loc
       # att_scores: (n, num_atts)
       tic = time.time()
-      scores, sub_grid_attn, sub_attn, loc_attn, rel_attn, rel_ixs, weights, att_scores = \
+      scores, sub_grid_attn, sub_attn, loc_attn, rel_attn, rel_ixs, weights, att_scores, _ = \
         model(Feats['pool5'], Feats['fc7'], Feats['lfeats'], Feats['dif_lfeats'], 
               Feats['cxt_fc7'], Feats['cxt_lfeats'],
               expanded_labels) 
