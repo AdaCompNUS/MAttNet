@@ -25,11 +25,13 @@ from mrcn import inference
 sys.path.insert(0, osp.join(this_dir, '../lib/loaders'))
 from loader import Loader
 
+# ROOT_DIR
+ROOT_DIR = '/media/peacock-rls/My Passport/mattnet'
 
 def main(args):
   dataset_splitBy = args.dataset + '_' + args.splitBy
-  if not osp.isdir(osp.join('cache/feats/', dataset_splitBy)):
-    os.makedirs(osp.join('cache/feats/', dataset_splitBy))
+  if not osp.isdir(osp.join(ROOT_DIR, 'cache/feats/', dataset_splitBy)):
+    os.makedirs(osp.join(ROOT_DIR, 'cache/feats/', dataset_splitBy))
 
   # Image Directory
   if 'coco' in dataset_splitBy:
@@ -51,7 +53,7 @@ def main(args):
   imdb = mrcn.imdb
 
   # feats_h5
-  feats_dir = osp.join('cache/feats', dataset_splitBy, 'mrcn', '%s_%s_%s' % (args.net_name, args.imdb_name, args.tag))
+  feats_dir = osp.join(ROOT_DIR, 'cache/feats', dataset_splitBy, 'mrcn', '%s_%s_%s' % (args.net_name, args.imdb_name, args.tag))
   if not osp.isdir(feats_dir):
     os.makedirs(feats_dir)
 

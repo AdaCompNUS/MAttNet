@@ -26,6 +26,8 @@ import torch
 import torch.nn as nn
 from torch.autograd import Variable
 
+ROOT_DIR = '/media/peacock-rls/My Passport/mattnet'
+
 # train one iter
 def lossFun(loader, optimizer, model, mm_crit, att_crit, opt, iter):
   # set mode
@@ -58,7 +60,7 @@ def lossFun(loader, optimizer, model, mm_crit, att_crit, opt, iter):
 
   # forward
   tic = time.time()
-  scores, _, sub_attn, loc_attn, rel_attn, _, _, att_scores = model(Feats['pool5'], Feats['fc7'], 
+  scores, _, sub_attn, loc_attn, rel_attn, _, _, att_scores, _ = model(Feats['pool5'], Feats['fc7'], 
                                          Feats['lfeats'], Feats['dif_lfeats'], 
                                          Feats['cxt_fc7'], Feats['cxt_lfeats'],
                                          labels)
@@ -93,14 +95,14 @@ def main(args):
   random.seed(opt['seed'])
 
   # set up loader
-  data_json = osp.join('cache/prepro', opt['dataset_splitBy'], 'data.json')
-  data_h5 = osp.join('cache/prepro', opt['dataset_splitBy'], 'data.h5')
+  data_json = osp.join(ROOT_DIR, 'cache/prepro', opt['dataset_splitBy'], 'data.json')
+  data_h5 = osp.join(ROOT_DIR, 'cache/prepro', opt['dataset_splitBy'], 'data.h5')
   loader = GtMRCNLoader(data_h5=data_h5, data_json=data_json)
   # prepare feats
   feats_dir = '%s_%s_%s' % (args.net_name, args.imdb_name, args.tag)
-  head_feats_dir=osp.join('cache/feats/', opt['dataset_splitBy'], 'mrcn', feats_dir)
+  head_feats_dir=osp.join(ROOT_DIR, 'cache/feats/', opt['dataset_splitBy'], 'mrcn', feats_dir)
   loader.prepare_mrcn(head_feats_dir, args)
-  ann_feats = osp.join('cache/feats', opt['dataset_splitBy'], 'mrcn', 
+  ann_feats = osp.join(ROOT_DIR, 'cache/feats', opt['dataset_splitBy'], 'mrcn', 
                        '%s_%s_%s_ann_feats.h5' % (opt['net_name'], opt['imdb_name'], opt['tag']))
   loader.loadFeats({'ann': ann_feats})
 
@@ -207,8 +209,8 @@ def main(args):
       infos['val_result_history'] = val_result_history
       infos['word_to_ix'] = loader.word_to_ix
       infos['att_to_ix'] = loader.att_to_ix
-      with open(osp.join(checkpoint_dir, opt['id']+'.json'), 'wb') as io:
-        json.dump(infos, io)
+      # with open(osp.join(checkpoint_dir, opt['id']+'.json'), 'wb') as io:
+      #   json.dump(infos, io)
         
     # update iter and epoch
     iter += 1

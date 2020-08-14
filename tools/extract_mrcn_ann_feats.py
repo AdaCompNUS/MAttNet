@@ -24,6 +24,7 @@ from mrcn import inference_no_imdb
 # dataloader
 from loaders.loader import Loader
 
+ROOT_DIR = '/media/peacock-rls/My Passport/mattnet'
 
 # box functions
 def xywh_to_xyxy(boxes):
@@ -75,8 +76,8 @@ def ann_to_pool5_fc7(mrcn, ann, net_conv, im_info):
 
 def main(args):
   dataset_splitBy = args.dataset + '_' + args.splitBy
-  if not osp.isdir(osp.join('cache/feats/', dataset_splitBy)):
-    os.makedirs(osp.join('cache/feats/', dataset_splitBy))
+  if not osp.isdir(osp.join(ROOT_DIR, 'cache/feats/', dataset_splitBy)):
+    os.makedirs(osp.join(ROOT_DIR, 'cache/feats/', dataset_splitBy))
 
   # Image Directory
   if 'coco' or 'combined' in dataset_splitBy:
@@ -102,7 +103,7 @@ def main(args):
   # feats_h5
   # feats_h5 = osp.join('cache/feats', dataset_splitBy, args.file_name)
   file_name = '%s_%s_%s_ann_feats.h5' % (args.net_name, args.imdb_name, args.tag)
-  feats_h5 = osp.join('cache/feats', dataset_splitBy, 'mrcn', file_name)
+  feats_h5 = osp.join(ROOT_DIR, 'cache/feats', dataset_splitBy, 'mrcn', file_name)
 
   f = h5py.File(feats_h5, 'w')
   pool5_set = f.create_dataset('pool5', (num_anns, 1024), dtype=np.float32)
@@ -110,7 +111,7 @@ def main(args):
 
   # extract
   feats_dir = '%s_%s_%s' % (args.net_name, args.imdb_name, args.tag)
-  head_feats_dir = osp.join('cache/feats/', dataset_splitBy, 'mrcn', feats_dir)
+  head_feats_dir = osp.join(ROOT_DIR, 'cache/feats/', dataset_splitBy, 'mrcn', feats_dir)
   for i, image in enumerate(images):
     image_id = image['image_id']
     net_conv, im_info = image_to_head(head_feats_dir, image_id)

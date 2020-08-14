@@ -22,6 +22,8 @@ import models.eval_easy_utils as eval_utils
 import torch
 import torch.nn as nn
 
+MATTNET_DIR = '/media/peacock-rls/My Passport/mattnet'
+
 def load_model(checkpoint_path, opt):
   tic = time.time()
   model = JointMatching(opt)
@@ -34,12 +36,13 @@ def load_model(checkpoint_path, opt):
 
 def evaluate(params):
   # set up loader
-  data_json = osp.join('cache/prepro', params['dataset_splitBy'], 'data.json')
-  data_h5 = osp.join('cache/prepro', params['dataset_splitBy'], 'data.h5')
+  data_json = osp.join(MATTNET_DIR, 'cache/prepro', params['dataset_splitBy'], 'data.json')
+  data_h5 = osp.join(MATTNET_DIR, 'cache/prepro', params['dataset_splitBy'], 'data.h5')
   loader = GtMRCNLoader(data_h5=data_h5, data_json=data_json)
 
   # load mode info
-  model_prefix = osp.join('output', params['dataset_splitBy'], params['id'])
+  model_prefix = osp.join(MATTNET_DIR, 'output', params['dataset_splitBy'], params['id'])
+  print(model_prefix)
   infos = json.load(open(model_prefix+'.json'))
   model_opt = infos['opt']
   model_path = model_prefix + '.pth'
@@ -51,9 +54,9 @@ def evaluate(params):
   args.net_name = model_opt['net_name']
   args.tag = model_opt['tag']
   args.iters = model_opt['iters']
-  loader.prepare_mrcn(head_feats_dir=osp.join('cache/feats/', model_opt['dataset_splitBy'], 'mrcn', feats_dir), 
+  loader.prepare_mrcn(head_feats_dir=osp.join(MATTNET_DIR, 'cache/feats/', model_opt['dataset_splitBy'], 'mrcn', feats_dir), 
                       args=args) 
-  ann_feats = osp.join('cache/feats', model_opt['dataset_splitBy'], 'mrcn', 
+  ann_feats = osp.join(MATTNET_DIR, 'cache/feats', model_opt['dataset_splitBy'], 'mrcn', 
                        '%s_%s_%s_ann_feats.h5' % (model_opt['net_name'], model_opt['imdb_name'], model_opt['tag']))
   loader.loadFeats({'ann': ann_feats})
 
@@ -75,7 +78,7 @@ def evaluate(params):
   print('attribute f1        : %.2f%%' % (overall['f1']*100.0))       
 
   # save
-  out_dir = osp.join('cache', 'results', params['dataset_splitBy'], 'easy')
+  out_dir = osp.join(MATTNET_DIR, 'cache', 'results', params['dataset_splitBy'], 'easy')
   if not osp.isdir(out_dir):
     os.makedirs(out_dir)
   out_file = osp.join(out_dir, params['id']+'_'+params['split']+'.json')
@@ -93,7 +96,7 @@ if __name__ == '__main__':
   parser = argparse.ArgumentParser()
   parser.add_argument('--dataset', type=str, default='refcoco', help='dataset name: refclef, refcoco, refcoco+, refcocog')
   parser.add_argument('--splitBy', type=str, default='unc', help='splitBy: unc, google, berkeley')
-  parser.add_argument('--split', type=str, default='testA', help='split: testAB or val, etc')
+  parser.add_argument('--split', type=str, default='testB', help='split: testAB or val, etc')
   parser.add_argument('--id', type=str, default='0', help='model id name')
   parser.add_argument('--num_sents', type=int, default=-1, help='how many sentences to use when periodically evaluating the loss? (-1=all)')
   parser.add_argument('--verbose', type=int, default=1, help='if we want to print the testing progress')

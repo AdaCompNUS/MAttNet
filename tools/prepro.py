@@ -43,6 +43,8 @@ forbidden_verb = ['none', 'look', 'be', 'see', 'have', 'head', 'show', 'strip', 
 forbidden_noun = ['none', 'picture', 'pic', 'screen', 'background', 'camera', 'edge', 'standing', 'thing', 
 'holding', 'end', 'view', 'bottom', 'center', 'row', 'piece']
 
+ROOT_DIR = '/media/peacock-rls/My Passport/mattnet'
+
 def build_vocab(refer, params):
   """
   Our vocabulary will add __background__, COCO categories, <UNK>, PAD, BOS, EOS
@@ -88,6 +90,8 @@ def build_vocab(refer, params):
   for sent_id, tokens in sentToTokens.items():
     final = [wd if word2count[wd] > count_thr else '<UNK>' for wd in tokens]
     sentToFinal[sent_id] = final
+
+  print(vocab)
 
   return vocab, sentToFinal
 
@@ -150,6 +154,11 @@ def prepare_json(refer, sentToFinal, ref_to_att_wds, params):
     width = image['width']
     height = image['height']
     file_name = image['file_name']
+
+    # filter
+    if image_id not in refer.imgToRefs:
+      continue
+
     ref_ids = [ref['ref_id'] for ref in refer.imgToRefs[image_id]]
     ann_ids = [ann['id'] for ann in refer.imgToAnns[image_id]]
     images += [ {'image_id': image_id, 'height': height, 'width': width, 'file_name': file_name, 'ref_ids': ref_ids, 'ann_ids': ann_ids, 'h5_id': h5_id} ]
@@ -160,6 +169,9 @@ def prepare_json(refer, sentToFinal, ref_to_att_wds, params):
   anns = []
   h5_id = 0
   for image_id in refer.Imgs:
+    if image_id not in refer.imgToRefs:
+      continue
+    
     ann_ids = [ann['id'] for ann in refer.imgToAnns[image_id]]
     for ann_id in ann_ids:
       ann = refer.Anns[ann_id]
@@ -196,6 +208,10 @@ def build_att_vocab(refer, params, att_types=['r1', 'r2', 'r7']):
   for sent in sents:
     sent_id = sent['sent_id']
     atts = sent['atts']
+
+    if sent_id not in sentToRef.keys():
+      continue
+
     ref_id = sentToRef[sent_id]['ref_id']
     for att_type in att_types:
       att_wds = [wd for wd in atts[att_type] if wd not in forbidden]
@@ -240,8 +256,8 @@ def main(params):
       raise NotImplementedError
 
   # mkdir and write json file
-  if not osp.isdir(osp.join('cache/prepro', dataset+'_'+splitBy)):
-    os.makedirs(osp.join('cache/prepro', dataset+'_'+splitBy))
+  if not osp.isdir(osp.join(ROOT_DIR, 'cache/prepro', dataset+'_'+splitBy)):
+    os.makedirs(osp.join(ROOT_DIR, 'cache/prepro', dataset+'_'+splitBy))
 
   # load refer
   sys.path.insert(0, 'pyutils/refer')
@@ -273,15 +289,15 @@ def main(params):
              'att_to_cnt': att2cnt,
              'cat_to_ix': {cat_name: cat_id for cat_id, cat_name in refer.Cats.items()},
              'label_length': params['max_length'],}, 
-             open(osp.join('cache/prepro', dataset+'_'+splitBy, params['output_json']), 'w'))
-  print('%s written.' % osp.join('cache/prepro', params['output_json']))
+             open(osp.join(ROOT_DIR, 'cache/prepro', dataset+'_'+splitBy, params['output_json']), 'w'))
+  print('%s written.' % osp.join(ROOT_DIR, 'cache/prepro', params['output_json']))
 
   # write h5 file which contains /sentences
-  f = h5py.File(osp.join('cache/prepro', dataset+'_'+splitBy, params['output_h5']), 'w')
+  f = h5py.File(osp.join(ROOT_DIR, 'cache/prepro', dataset+'_'+splitBy, params['output_h5']), 'w')
   L = encode_captions(sentences, wtoi, params)
   f.create_dataset("labels", dtype='int32', data=L)
   f.close()
-  print('%s writtern.' % osp.join('cache/prepro', params['output_h5']))
+  print('%s writtern.' % osp.join(ROOT_DIR, 'cache/prepro', params['output_h5']))
 
   # check
   # check_encoded_labels(sentences, L, itow)
