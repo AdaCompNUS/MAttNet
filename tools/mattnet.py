@@ -18,7 +18,7 @@ import os.path as osp
 import time
 from pprint import pprint
 
-import _init_paths
+from . import _init_paths
 from layers.joint_match import JointMatching
 from mrcn import inference
 from model.nms_wrapper import nms

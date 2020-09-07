@@ -19,7 +19,7 @@ import torch
 from torch.autograd import Variable
 
 # mrcn imports
-import _init_paths
+# import _init_paths
 from datasets.factory import get_imdb
 from model.config import cfg, cfg_from_file, cfg_from_list
 from model.bbox_transform import clip_boxes, bbox_transform_inv
@@ -63,7 +63,7 @@ class Inference:
 
     # Load network
     self.net = self.load_net()
-    print(self.net)
+    # print(self.net)
 
   def load_net(self):
     # Load network
