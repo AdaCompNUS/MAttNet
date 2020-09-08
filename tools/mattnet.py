@@ -187,6 +187,51 @@ class MattNet():
                      'cxt_fc7': cxt_fc7, 'cxt_lfeats': cxt_lfeats}
     return data
 
+  def forward_image_with_bbox(self, img, bboxes, classes):
+    # 1st step: forward process
+    _, _ = self.mrcn.predict(img)
+
+    # get head feats, i.e., net_conv
+    net_conv = self.mrcn.net._predictions['net_conv']  # Variable cuda (1, 1024, h, w)
+    im_info = self.mrcn.net._im_info  # [[H, W, im_scale]]
+
+    # add to dets
+    dets = []
+    det_id = 0
+    # detections: list of (n, 5), [xyxyc]
+    for i, bbox in enumerate(bboxes):
+      x1, y1, x2, y2, cls_ind = bbox
+      cls = classes[i]
+      det = {'det_id': det_id,
+             'box': [x1, y1, x2 - x1 + 1, y2 - y1 + 1],
+             'category_name': cls,
+             'category_id': cls_ind,
+             'score': 1.}
+      dets += [det]
+      det_id += 1
+    Dets = {det['det_id']: det for det in dets}
+    det_ids = [det['det_id'] for det in dets]
+
+    # 3rd step: compute features
+    pool5, fc7 = self.mrcn.box_to_spatial_fc7(net_conv, im_info, bboxes[:, :4])  # (n, 1024, 7, 7), (n, 2048, 7, 7)
+    lfeats = self.compute_lfeats(det_ids, Dets, img)
+    dif_lfeats = self.compute_dif_lfeats(det_ids, Dets)
+    cxt_fc7, cxt_lfeats, cxt_det_ids = self.fetch_cxt_feats(det_ids, Dets, fc7, self.model_opt)
+
+    # move to Variable cuda
+    lfeats = Variable(torch.from_numpy(lfeats).cuda())
+    dif_lfeats = Variable(torch.from_numpy(dif_lfeats).cuda())
+    cxt_lfeats = Variable(torch.from_numpy(cxt_lfeats).cuda())
+
+    # return
+    data = {}
+    data['det_ids'] = det_ids
+    data['dets'] = dets
+    data['cxt_det_ids'] = cxt_det_ids
+    data['Feats'] = {'pool5': pool5, 'fc7': fc7, 'lfeats': lfeats, 'dif_lfeats': dif_lfeats,
+                     'cxt_fc7': cxt_fc7, 'cxt_lfeats': cxt_lfeats}
+    return data
+
   def comprehend(self, img_data, expr):
     """
     Arguments:
@@ -209,7 +254,10 @@ class MattNet():
     det_ids = img_data['det_ids']
     cxt_det_ids = img_data['cxt_det_ids']
     Dets = {det['det_id']: det for det in  img_data['dets']}
-    masks = img_data['masks']
+    if 'masks' in img_data:
+      masks = img_data['masks']
+    else:
+      masks = None
     Feats = img_data['Feats']
 
     # encode labels
@@ -236,7 +284,8 @@ class MattNet():
     entry['tokens'] = expr.split()
     entry['pred_det_id'] = det_ids[pred_ix]
     entry['pred_box'] = Dets[pred_det_id]['box']
-    entry['pred_mask'] = masks[pred_ix]
+    if masks is not None:
+      entry['pred_mask'] = masks[pred_ix]
     # relative det_id
     entry['rel_det_id'] = cxt_det_ids[pred_ix][rel_ix]
     entry['rel_box'] = Dets[entry['rel_det_id']]['box'] if entry['rel_det_id'] > 0 else [0,0,0,0]

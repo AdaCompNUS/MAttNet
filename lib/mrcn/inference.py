@@ -92,7 +92,10 @@ class Inference:
   def predict(self, img_path):
     # return scores/probs (num_rois, 81), pred_boxes (num_rois, 81*4)
     # in numpy
-    im = cv2.imread(img_path)
+    if isinstance(img_path, str):
+      im = cv2.imread(img_path)
+    else:
+      im = img_path
     blobs, im_scales = self._get_blobs(im) 
     im_blob = blobs['data']  # (1, iH, iW, 3)
     blobs['im_info'] = np.array([[im_blob.shape[1], im_blob.shape[2], im_scales[0]]], dtype=np.float32)
