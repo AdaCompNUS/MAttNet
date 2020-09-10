@@ -127,8 +127,9 @@ class MattNet():
     im = imread(img_path)
 
     # 1st step: detect objects
-    scores, boxes = self.mrcn.predict(img_path)
-
+    with torch.no_grad():
+      scores, boxes = self.mrcn.predict(img_path)
+      
     # get head feats, i.e., net_conv 
     net_conv = self.mrcn.net._predictions['net_conv']  # Variable cuda (1, 1024, h, w)
     im_info = self.mrcn.net._im_info  # [[H, W, im_scale]]
@@ -189,7 +190,8 @@ class MattNet():
 
   def forward_image_with_bbox(self, img, bboxes, classes):
     # 1st step: forward process
-    _, _ = self.mrcn.predict(img)
+    with torch.no_grad():
+      _, _ = self.mrcn.predict(img)
 
     # get head feats, i.e., net_conv
     net_conv = self.mrcn.net._predictions['net_conv']  # Variable cuda (1, 1024, h, w)
